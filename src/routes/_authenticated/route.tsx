@@ -21,34 +21,43 @@ function AuthedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b">
+    <div className="min-h-screen text-foreground">
+      <header className="border-b border-border/70 bg-card/60 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link to="/app" className="flex items-center gap-2 font-semibold">
-            <span>📖</span> QuestFit
+          <Link to="/app" className="flex items-center gap-2">
+            <span className="font-display text-2xl font-semibold leading-none text-primary">Q</span>
+            <span className="font-display text-xl font-semibold tracking-tight">QuestFit</span>
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link to="/app" className="px-3 py-1.5 text-sm hover:underline">
-              Dashboard
-            </Link>
-            <Link to="/log/workout" className="px-3 py-1.5 text-sm hover:underline">
-              Workouts
-            </Link>
-            <Link to="/log/weight" className="px-3 py-1.5 text-sm hover:underline">
-              Weight
-            </Link>
-            <Link to="/library" className="px-3 py-1.5 text-sm hover:underline">
-              Library
-            </Link>
+          <nav className="flex items-center gap-1 text-sm">
+            <NavLink to="/app">Dashboard</NavLink>
+            <NavLink to="/log/workout">Workouts</NavLink>
+            <NavLink to="/log/weight">Weight</NavLink>
+            <NavLink to="/library">Library</NavLink>
+            <NavLink to="/settings">Settings</NavLink>
             <Button variant="ghost" size="sm" onClick={signOut}>
               Sign out
             </Button>
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-5xl px-6 py-10">
         <Outlet />
       </main>
+      <footer className="mx-auto max-w-5xl px-6 pb-10 text-center text-xs italic text-muted-foreground">
+        “Every page you turn, you earned with a step.”
+      </footer>
     </div>
+  );
+}
+
+function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      activeProps={{ className: "rounded-md px-3 py-1.5 bg-secondary text-foreground" }}
+    >
+      {children}
+    </Link>
   );
 }
