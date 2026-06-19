@@ -290,11 +290,13 @@ function Dashboard() {
       </div>
 
       {hasPrologue && (
-        <Card className="p-6">
+        <Card className="book-card p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Narrative challenge</div>
-              <h3 className="mt-1 text-lg font-semibold">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Narrative challenge
+              </div>
+              <h3 className="mt-2 font-display text-2xl font-semibold">
                 {ch ? ch.title : "No active challenge"}
               </h3>
             </div>
@@ -309,8 +311,10 @@ function Dashboard() {
           </div>
           {ch && (
             <>
-              <p className="mt-3 text-sm italic text-muted-foreground">"{ch.narrative_hook}"</p>
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+              <p className="mt-3 font-display text-lg italic leading-relaxed text-muted-foreground">
+                “{ch.narrative_hook}”
+              </p>
+              <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {ch.progress_value} / {ch.target_value} {METRIC_LABEL[ch.metric] ?? ch.metric}
                 </span>
@@ -335,11 +339,12 @@ function Dashboard() {
       )}
 
       {hasPrologue && (
-        <Card className="p-6">
+        <Card className="book-card p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">The story so far</h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">The volume so far</p>
+              <h2 className="mt-2 font-display text-3xl font-semibold">Your chapters</h2>
+              <p className="mt-1 text-sm italic text-muted-foreground">
                 {weeklyReady
                   ? "You've earned a new chapter."
                   : daysUntilWeekly > 0
@@ -360,27 +365,27 @@ function Dashboard() {
                 disabled={genMutation.isPending || !weeklyReady}
                 title={!weeklyReady ? "Keep moving — the chapter unlocks soon." : ""}
               >
-                {genMutation.isPending ? "Writing..." : "Weekly chapter"}
+                {genMutation.isPending ? "Writing…" : "Weekly chapter"}
               </Button>
             </div>
           </div>
 
           {data.recentChapters.length > 0 && (
-            <ul className="mt-6 divide-y">
+            <ul className="mt-6 divide-y divide-border/70">
               {data.recentChapters.map((c) => (
-                <li key={c.id} className="py-3">
+                <li key={c.id} className="py-4">
                   <Link
                     to="/chapters/$id"
                     params={{ id: c.id }}
-                    className="flex items-center justify-between hover:underline"
+                    className="flex items-center justify-between gap-4 hover:text-primary"
                   >
-                    <span>
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <span className="flex items-baseline gap-3">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                         {c.chapter_type.replace("_", " ")}
                       </span>
-                      <span className="ml-3 font-medium">{c.title}</span>
+                      <span className="font-display text-lg">{c.title}</span>
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs italic text-muted-foreground">
                       {new Date(c.created_at).toLocaleDateString()}
                     </span>
                   </Link>
@@ -406,10 +411,10 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <Card className="p-5">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-bold">{value}</div>
-      {progress !== undefined && <Progress value={progress} className="mt-3" />}
+    <Card className="book-card p-5">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+      <div className="mt-2 font-display text-3xl font-semibold">{value}</div>
+      {progress !== undefined && <Progress value={progress} className="mt-3 h-1.5" />}
       {sub && <div className="mt-2 text-xs text-muted-foreground">{sub}</div>}
     </Card>
   );
