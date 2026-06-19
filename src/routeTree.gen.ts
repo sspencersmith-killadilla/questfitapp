@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedLogWorkoutRouteImport } from './routes/_authenticated/log.workout'
+import { Route as AuthenticatedLogWeightRouteImport } from './routes/_authenticated/log.weight'
 import { Route as AuthenticatedChaptersIdRouteImport } from './routes/_authenticated/chapters.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -46,6 +48,16 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLogWorkoutRoute = AuthenticatedLogWorkoutRouteImport.update({
+  id: '/log/workout',
+  path: '/log/workout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLogWeightRoute = AuthenticatedLogWeightRouteImport.update({
+  id: '/log/weight',
+  path: '/log/weight',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedChaptersIdRoute = AuthenticatedChaptersIdRouteImport.update({
   id: '/chapters/$id',
   path: '/chapters/$id',
@@ -59,6 +71,8 @@ export interface FileRoutesByFullPath {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/chapters/$id': typeof AuthenticatedChaptersIdRoute
+  '/log/weight': typeof AuthenticatedLogWeightRoute
+  '/log/workout': typeof AuthenticatedLogWorkoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +81,8 @@ export interface FileRoutesByTo {
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/chapters/$id': typeof AuthenticatedChaptersIdRoute
+  '/log/weight': typeof AuthenticatedLogWeightRoute
+  '/log/workout': typeof AuthenticatedLogWorkoutRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,6 +93,8 @@ export interface FileRoutesById {
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/chapters/$id': typeof AuthenticatedChaptersIdRoute
+  '/_authenticated/log/weight': typeof AuthenticatedLogWeightRoute
+  '/_authenticated/log/workout': typeof AuthenticatedLogWorkoutRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,8 +105,18 @@ export interface FileRouteTypes {
     | '/library'
     | '/onboarding'
     | '/chapters/$id'
+    | '/log/weight'
+    | '/log/workout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app' | '/library' | '/onboarding' | '/chapters/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/library'
+    | '/onboarding'
+    | '/chapters/$id'
+    | '/log/weight'
+    | '/log/workout'
   id:
     | '__root__'
     | '/'
@@ -98,6 +126,8 @@ export interface FileRouteTypes {
     | '/_authenticated/library'
     | '/_authenticated/onboarding'
     | '/_authenticated/chapters/$id'
+    | '/_authenticated/log/weight'
+    | '/_authenticated/log/workout'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -150,6 +180,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/log/workout': {
+      id: '/_authenticated/log/workout'
+      path: '/log/workout'
+      fullPath: '/log/workout'
+      preLoaderRoute: typeof AuthenticatedLogWorkoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/log/weight': {
+      id: '/_authenticated/log/weight'
+      path: '/log/weight'
+      fullPath: '/log/weight'
+      preLoaderRoute: typeof AuthenticatedLogWeightRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chapters/$id': {
       id: '/_authenticated/chapters/$id'
       path: '/chapters/$id'
@@ -165,6 +209,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedChaptersIdRoute: typeof AuthenticatedChaptersIdRoute
+  AuthenticatedLogWeightRoute: typeof AuthenticatedLogWeightRoute
+  AuthenticatedLogWorkoutRoute: typeof AuthenticatedLogWorkoutRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -172,6 +218,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedChaptersIdRoute: AuthenticatedChaptersIdRoute,
+  AuthenticatedLogWeightRoute: AuthenticatedLogWeightRoute,
+  AuthenticatedLogWorkoutRoute: AuthenticatedLogWorkoutRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
