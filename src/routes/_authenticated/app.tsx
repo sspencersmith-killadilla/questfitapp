@@ -98,7 +98,7 @@ function Dashboard() {
   if (!data.profile?.onboarding_complete) return null;
 
   const genre = data.profile.chosen_genre ? genreById(data.profile.chosen_genre as any) : null;
-  const today = new Date().toISOString().slice(0, 10);
+  const profile = data.profile as any;
   const weekStart = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
   const prevWeekStart = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
 
@@ -111,13 +111,24 @@ function Dashboard() {
   const prevWeekMinutes = prevWeekActivity.reduce((s, a) => s + (a.active_minutes ?? 0), 0);
   const weekSteps = weekActivity.reduce((s, a) => s + (a.steps ?? 0), 0);
   const prevWeekSteps = prevWeekActivity.reduce((s, a) => s + (a.steps ?? 0), 0);
-  const goal = data.profile.weekly_goal_minutes;
-  const goalPct = Math.min(100, Math.round((weekMinutes / goal) * 100));
+  const weekWorkouts = weekActivity.filter((a) => a.workout_type).length;
+  const prevWeekWorkouts = prevWeekActivity.filter((a) => a.workout_type).length;
+
+  const goalMinutes = profile.weekly_goal_minutes ?? 150;
+  const goalSteps = profile.weekly_goal_steps ?? 35000;
+  const goalWorkouts = profile.weekly_goal_workouts ?? 3;
+
+  const minutesPct = Math.min(100, Math.round((weekMinutes / goalMinutes) * 100));
+  const stepsPct = goalSteps ? Math.min(100, Math.round((weekSteps / goalSteps) * 100)) : 0;
+  const workoutsPct = goalWorkouts
+    ? Math.min(100, Math.round((weekWorkouts / goalWorkouts) * 100))
+    : 0;
+
   const activeDaysThisWeek = new Set(
     weekActivity.filter((a) => a.steps > 1000 || a.active_minutes >= 10).map((a) => a.entry_date),
   ).size;
 
-  // streak: consecutive days back from today with activity
+  // streak
   const activitySet = new Set(
     data.activity.filter((a) => a.steps > 1000 || a.active_minutes >= 10).map((a) => a.entry_date),
   );
@@ -129,12 +140,12 @@ function Dashboard() {
   }
 
   const latestWeight = data.weights[0];
-  const earlierWeight = data.weights.find(
-    (w) => w.entry_date <= new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
-  );
+  const startingWeight = profile.starting_weight_kg
+    ? Number(profile.starting_weight_kg)
+    : null;
   const weightDelta =
-    latestWeight && earlierWeight
-      ? Number(latestWeight.weight_kg) - Number(earlierWeight.weight_kg)
+    latestWeight && startingWeight !== null
+      ? Number(latestWeight.weight_kg) - startingWeight
       : null;
 
   const hasPrologue = data.recentChapters.some((c) => c.chapter_type === "prologue");
@@ -149,12 +160,8 @@ function Dashboard() {
     const d = new Date(Date.now() - (13 - i) * 86400000).toISOString().slice(0, 10);
     const entries = data.activity.filter((a) => a.entry_date === d);
     const minutes = entries.reduce((s, a) => s + (a.active_minutes ?? 0), 0);
-    const dailyGoal = Math.round(goal / 7);
-    return {
-      date: d.slice(5),
-      minutes,
-      hit: minutes >= dailyGoal,
-    };
+    const dailyGoal = Math.round(goalMinutes / 7);
+    return { date: d.slice(5), minutes, hit: minutes >= dailyGoal };
   });
 
   const ch = data.activeChallenge;
@@ -164,16 +171,18 @@ function Dashboard() {
     : 0;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Welcome back, {data.profile.display_name}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Welcome back, {data.profile.display_name}
+          </p>
+          <h1 className="mt-2 font-display text-5xl font-semibold leading-tight">
             {genre?.emoji} {genre?.name}
           </h1>
           {data.storyState?.current_arc && (
-            <p className="mt-1 text-sm italic text-muted-foreground">
-              Current arc: {data.storyState.current_arc}
+            <p className="mt-2 font-display text-lg italic text-muted-foreground">
+              Current arc · {data.storyState.current_arc}
             </p>
           )}
         </div>
@@ -184,17 +193,18 @@ function Dashboard() {
       </div>
 
       {!hasPrologue && (
-        <Card className="border-primary/30 bg-primary/5 p-6">
-          <h2 className="text-lg font-semibold">Your story hasn't begun yet</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <Card className="book-card border-primary/30 bg-primary/5 p-7">
+          <p className="text-xs uppercase tracking-[0.2em] text-primary">Prologue awaits</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold">Your story hasn't begun yet</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Generate the prologue to meet your protagonist and set the stakes.
           </p>
           <Button
-            className="mt-4"
+            className="mt-5"
             onClick={() => genMutation.mutate("prologue")}
             disabled={genMutation.isPending}
           >
-            {genMutation.isPending ? "Writing prologue..." : "Begin the story"}
+            {genMutation.isPending ? "Writing prologue…" : "Begin the story"}
           </Button>
         </Card>
       )}
@@ -202,60 +212,91 @@ function Dashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Streak" value={`${streak}`} sub={`day${streak === 1 ? "" : "s"} in a row`} />
         <StatCard
-          label="This week"
+          label="Active minutes"
           value={`${weekMinutes}`}
-          sub={`/ ${goal} min`}
-          progress={goalPct}
+          sub={`of ${goalMinutes} · ${delta(weekMinutes, prevWeekMinutes, " vs last")}`}
+          progress={minutesPct}
         />
         <StatCard
-          label="Steps (7d)"
+          label="Steps"
           value={weekSteps.toLocaleString()}
-          sub={delta(weekSteps, prevWeekSteps, " vs last week")}
+          sub={`of ${goalSteps.toLocaleString()} · ${delta(weekSteps, prevWeekSteps, " vs last")}`}
+          progress={stepsPct}
         />
         <StatCard
-          label="Weight"
-          value={latestWeight ? `${latestWeight.weight_kg} kg` : "—"}
-          sub={
-            weightDelta !== null
-              ? `${weightDelta > 0 ? "+" : ""}${weightDelta.toFixed(1)} kg / 30d`
-              : "log to track"
-          }
+          label="Workouts"
+          value={`${weekWorkouts}`}
+          sub={`of ${goalWorkouts} · ${delta(weekWorkouts, prevWeekWorkouts, " vs last")}`}
+          progress={workoutsPct}
         />
       </div>
 
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Last 14 days · active minutes</h3>
-          <div className="text-xs text-muted-foreground">
-            Goal: {Math.round(goal / 7)} min/day
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="book-card p-5 md:col-span-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Chronicle</p>
+              <h3 className="font-display text-2xl font-semibold">Last 14 days</h3>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Daily target · {Math.round(goalMinutes / 7)} min
+            </div>
           </div>
-        </div>
-        <div className="mt-4 h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={today14} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="date" className="text-xs" />
-              <YAxis className="text-xs" />
-              <RTooltip />
-              <Bar dataKey="minutes" radius={[4, 4, 0, 0]}>
-                {today14.map((d, i) => (
-                  <Cell
-                    key={i}
-                    fill={d.hit ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.4)"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+          <div className="mt-4 h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={today14} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" className="text-xs" stroke="currentColor" opacity={0.5} />
+                <YAxis className="text-xs" stroke="currentColor" opacity={0.5} />
+                <RTooltip
+                  contentStyle={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="minutes" radius={[4, 4, 0, 0]}>
+                  {today14.map((d, i) => (
+                    <Cell
+                      key={i}
+                      fill={d.hit ? "var(--ember)" : "color-mix(in oklab, var(--muted-foreground) 35%, transparent)"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="book-card p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Body</p>
+          <h3 className="font-display text-2xl font-semibold">Weight</h3>
+          <div className="mt-4 font-display text-4xl font-semibold">
+            {latestWeight ? `${latestWeight.weight_kg} kg` : "—"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {startingWeight !== null && weightDelta !== null
+              ? `${weightDelta > 0 ? "+" : ""}${weightDelta.toFixed(1)} kg from starting (${startingWeight} kg)`
+              : startingWeight === null
+                ? <>set a starting weight in <Link to="/settings" className="text-primary hover:underline">settings</Link></>
+                : "log a weigh-in to track"}
+          </div>
+          <div className="mt-5 flex gap-2">
+            <Link to="/log/weight"><Button variant="outline" size="sm">Weigh in</Button></Link>
+            <Link to="/settings"><Button variant="ghost" size="sm">Goals</Button></Link>
+          </div>
+        </Card>
+      </div>
 
       {hasPrologue && (
-        <Card className="p-6">
+        <Card className="book-card p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Narrative challenge</div>
-              <h3 className="mt-1 text-lg font-semibold">
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                Narrative challenge
+              </div>
+              <h3 className="mt-2 font-display text-2xl font-semibold">
                 {ch ? ch.title : "No active challenge"}
               </h3>
             </div>
@@ -270,8 +311,10 @@ function Dashboard() {
           </div>
           {ch && (
             <>
-              <p className="mt-3 text-sm italic text-muted-foreground">"{ch.narrative_hook}"</p>
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+              <p className="mt-3 font-display text-lg italic leading-relaxed text-muted-foreground">
+                “{ch.narrative_hook}”
+              </p>
+              <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {ch.progress_value} / {ch.target_value} {METRIC_LABEL[ch.metric] ?? ch.metric}
                 </span>
@@ -296,11 +339,12 @@ function Dashboard() {
       )}
 
       {hasPrologue && (
-        <Card className="p-6">
+        <Card className="book-card p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">The story so far</h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">The volume so far</p>
+              <h2 className="mt-2 font-display text-3xl font-semibold">Your chapters</h2>
+              <p className="mt-1 text-sm italic text-muted-foreground">
                 {weeklyReady
                   ? "You've earned a new chapter."
                   : daysUntilWeekly > 0
@@ -321,27 +365,27 @@ function Dashboard() {
                 disabled={genMutation.isPending || !weeklyReady}
                 title={!weeklyReady ? "Keep moving — the chapter unlocks soon." : ""}
               >
-                {genMutation.isPending ? "Writing..." : "Weekly chapter"}
+                {genMutation.isPending ? "Writing…" : "Weekly chapter"}
               </Button>
             </div>
           </div>
 
           {data.recentChapters.length > 0 && (
-            <ul className="mt-6 divide-y">
+            <ul className="mt-6 divide-y divide-border/70">
               {data.recentChapters.map((c) => (
-                <li key={c.id} className="py-3">
+                <li key={c.id} className="py-4">
                   <Link
                     to="/chapters/$id"
                     params={{ id: c.id }}
-                    className="flex items-center justify-between hover:underline"
+                    className="flex items-center justify-between gap-4 hover:text-primary"
                   >
-                    <span>
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <span className="flex items-baseline gap-3">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                         {c.chapter_type.replace("_", " ")}
                       </span>
-                      <span className="ml-3 font-medium">{c.title}</span>
+                      <span className="font-display text-lg">{c.title}</span>
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs italic text-muted-foreground">
                       {new Date(c.created_at).toLocaleDateString()}
                     </span>
                   </Link>
@@ -367,10 +411,10 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <Card className="p-5">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-bold">{value}</div>
-      {progress !== undefined && <Progress value={progress} className="mt-3" />}
+    <Card className="book-card p-5">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+      <div className="mt-2 font-display text-3xl font-semibold">{value}</div>
+      {progress !== undefined && <Progress value={progress} className="mt-3 h-1.5" />}
       {sub && <div className="mt-2 text-xs text-muted-foreground">{sub}</div>}
     </Card>
   );

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/chapters/$id': typeof AuthenticatedChaptersIdRoute
   '/log/weight': typeof AuthenticatedLogWeightRoute
   '/log/workout': typeof AuthenticatedLogWorkoutRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/chapters/$id': typeof AuthenticatedChaptersIdRoute
   '/log/weight': typeof AuthenticatedLogWeightRoute
   '/log/workout': typeof AuthenticatedLogWorkoutRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/chapters/$id': typeof AuthenticatedChaptersIdRoute
   '/_authenticated/log/weight': typeof AuthenticatedLogWeightRoute
   '/_authenticated/log/workout': typeof AuthenticatedLogWorkoutRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/library'
     | '/onboarding'
+    | '/settings'
     | '/chapters/$id'
     | '/log/weight'
     | '/log/workout'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/library'
     | '/onboarding'
+    | '/settings'
     | '/chapters/$id'
     | '/log/weight'
     | '/log/workout'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/library'
     | '/_authenticated/onboarding'
+    | '/_authenticated/settings'
     | '/_authenticated/chapters/$id'
     | '/_authenticated/log/weight'
     | '/_authenticated/log/workout'
@@ -158,6 +170,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
@@ -208,6 +227,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedChaptersIdRoute: typeof AuthenticatedChaptersIdRoute
   AuthenticatedLogWeightRoute: typeof AuthenticatedLogWeightRoute
   AuthenticatedLogWorkoutRoute: typeof AuthenticatedLogWorkoutRoute
@@ -217,6 +237,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedChaptersIdRoute: AuthenticatedChaptersIdRoute,
   AuthenticatedLogWeightRoute: AuthenticatedLogWeightRoute,
   AuthenticatedLogWorkoutRoute: AuthenticatedLogWorkoutRoute,
