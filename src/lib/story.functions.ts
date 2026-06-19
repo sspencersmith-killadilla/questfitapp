@@ -275,7 +275,7 @@ export const generateChapter = createServerFn({ method: "POST" })
           metric: resolved.metric,
           target_value: resolved.target_value,
           progress_value: resolved.progress_value,
-          status: resolved.status,
+          status: resolved.status as "completed" | "failed",
         };
         challengeIdToLink = resolved.id;
       }
