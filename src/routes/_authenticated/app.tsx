@@ -40,7 +40,7 @@ function Dashboard() {
       toast.success(`New ${chapter.chapter_type.replace("_", " ")} unlocked`);
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["chapters"] });
-      navigate({ to: "/app/chapters/$id", params: { id: chapter.id } });
+      navigate({ to: "/chapters/$id", params: { id: chapter.id } });
     },
     onError: (e: any) => toast.error(e.message ?? "Generation failed"),
   });
@@ -146,7 +146,7 @@ function Dashboard() {
             <ul className="mt-6 divide-y">
               {data.recentChapters.map((c) => (
                 <li key={c.id} className="py-3">
-                  <Link to="/app/chapters/$id" params={{ id: c.id }} className="flex items-center justify-between hover:underline">
+                  <Link to="/chapters/$id" params={{ id: c.id }} className="flex items-center justify-between hover:underline">
                     <span>
                       <span className="text-xs uppercase tracking-wider text-muted-foreground">
                         {c.chapter_type.replace("_", " ")}

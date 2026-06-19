@@ -29,7 +29,7 @@ function Library() {
           {data.map((c) => (
             <Link
               key={c.id}
-              to="/app/chapters/$id"
+              to="/chapters/$id"
               params={{ id: c.id }}
               className="block p-5 hover:bg-accent"
             >

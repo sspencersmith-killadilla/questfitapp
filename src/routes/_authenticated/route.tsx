@@ -31,7 +31,7 @@ function AuthedLayout() {
             <Link to="/app" className="px-3 py-1.5 text-sm hover:underline">
               Dashboard
             </Link>
-            <Link to="/app/library" className="px-3 py-1.5 text-sm hover:underline">
+            <Link to="/library" className="px-3 py-1.5 text-sm hover:underline">
               Library
             </Link>
             <Button variant="ghost" size="sm" onClick={signOut}>

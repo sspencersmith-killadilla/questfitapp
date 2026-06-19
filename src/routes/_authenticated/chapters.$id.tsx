@@ -21,7 +21,7 @@ function ChapterView() {
 
   return (
     <article className="mx-auto max-w-2xl">
-      <Link to="/app/library" className="text-sm text-muted-foreground hover:underline">← Library</Link>
+      <Link to="/library" className="text-sm text-muted-foreground hover:underline">← Library</Link>
       <div className="mt-6 text-xs uppercase tracking-wider text-muted-foreground">
         {data.chapter_type.replace("_", " ")} · {new Date(data.created_at).toLocaleDateString()}
       </div>
