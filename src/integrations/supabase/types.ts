@@ -60,8 +60,11 @@ export type Database = {
           display_name: string | null
           id: string
           onboarding_complete: boolean
+          starting_weight_kg: number | null
           updated_at: string
           weekly_goal_minutes: number
+          weekly_goal_steps: number
+          weekly_goal_workouts: number
         }
         Insert: {
           chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
@@ -69,8 +72,11 @@ export type Database = {
           display_name?: string | null
           id: string
           onboarding_complete?: boolean
+          starting_weight_kg?: number | null
           updated_at?: string
           weekly_goal_minutes?: number
+          weekly_goal_steps?: number
+          weekly_goal_workouts?: number
         }
         Update: {
           chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
@@ -78,8 +84,11 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_complete?: boolean
+          starting_weight_kg?: number | null
           updated_at?: string
           weekly_goal_minutes?: number
+          weekly_goal_steps?: number
+          weekly_goal_workouts?: number
         }
         Relationships: []
       }
