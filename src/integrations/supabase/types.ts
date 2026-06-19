@@ -14,7 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_entries: {
+        Row: {
+          active_minutes: number
+          created_at: string
+          entry_date: string
+          id: string
+          intensity: string | null
+          notes: string | null
+          source: Database["public"]["Enums"]["activity_source"]
+          steps: number
+          user_id: string
+          workout_type: string | null
+        }
+        Insert: {
+          active_minutes?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          intensity?: string | null
+          notes?: string | null
+          source?: Database["public"]["Enums"]["activity_source"]
+          steps?: number
+          user_id: string
+          workout_type?: string | null
+        }
+        Update: {
+          active_minutes?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          intensity?: string | null
+          notes?: string | null
+          source?: Database["public"]["Enums"]["activity_source"]
+          steps?: number
+          user_id?: string
+          workout_type?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          chosen_genre: Database["public"]["Enums"]["story_genre"] | null
+          created_at: string
+          display_name: string | null
+          id: string
+          onboarding_complete: boolean
+          updated_at: string
+          weekly_goal_minutes: number
+        }
+        Insert: {
+          chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          onboarding_complete?: boolean
+          updated_at?: string
+          weekly_goal_minutes?: number
+        }
+        Update: {
+          chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          onboarding_complete?: boolean
+          updated_at?: string
+          weekly_goal_minutes?: number
+        }
+        Relationships: []
+      }
+      story_chapters: {
+        Row: {
+          activity_snapshot: Json
+          chapter_type: Database["public"]["Enums"]["chapter_type"]
+          content: string
+          created_at: string
+          id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_snapshot?: Json
+          chapter_type: Database["public"]["Enums"]["chapter_type"]
+          content: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_snapshot?: Json
+          chapter_type?: Database["public"]["Enums"]["chapter_type"]
+          content?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      story_state: {
+        Row: {
+          current_arc: string | null
+          last_generated_at: string | null
+          protagonist_name: string | null
+          rolling_summary: string
+          story_bible: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_arc?: string | null
+          last_generated_at?: string | null
+          protagonist_name?: string | null
+          rolling_summary?: string
+          story_bible?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_arc?: string | null
+          last_generated_at?: string | null
+          protagonist_name?: string | null
+          rolling_summary?: string
+          story_bible?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weight_entries: {
+        Row: {
+          body_fat_pct: number | null
+          created_at: string
+          entry_date: string
+          id: string
+          muscle_kg: number | null
+          source: Database["public"]["Enums"]["activity_source"]
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          body_fat_pct?: number | null
+          created_at?: string
+          entry_date?: string
+          id?: string
+          muscle_kg?: number | null
+          source?: Database["public"]["Enums"]["activity_source"]
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          body_fat_pct?: number | null
+          created_at?: string
+          entry_date?: string
+          id?: string
+          muscle_kg?: number | null
+          source?: Database["public"]["Enums"]["activity_source"]
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +187,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      activity_source: "manual" | "withings" | "apple_health"
+      chapter_type: "daily_teaser" | "weekly_chapter" | "prologue"
+      story_genre: "fantasy" | "scifi" | "mystery" | "slice_of_life"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +316,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_source: ["manual", "withings", "apple_health"],
+      chapter_type: ["daily_teaser", "weekly_chapter", "prologue"],
+      story_genre: ["fantasy", "scifi", "mystery", "slice_of_life"],
+    },
   },
 } as const
