@@ -31,6 +31,12 @@ function AuthedLayout() {
             <Link to="/app" className="px-3 py-1.5 text-sm hover:underline">
               Dashboard
             </Link>
+            <Link to="/log/workout" className="px-3 py-1.5 text-sm hover:underline">
+              Workouts
+            </Link>
+            <Link to="/log/weight" className="px-3 py-1.5 text-sm hover:underline">
+              Weight
+            </Link>
             <Link to="/library" className="px-3 py-1.5 text-sm hover:underline">
               Library
             </Link>

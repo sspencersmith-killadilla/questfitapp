@@ -83,6 +83,65 @@ export type Database = {
         }
         Relationships: []
       }
+      story_challenges: {
+        Row: {
+          created_at: string
+          deadline: string
+          id: string
+          metric: Database["public"]["Enums"]["challenge_metric"]
+          narrative_hook: string
+          progress_value: number
+          resolution_chapter_id: string | null
+          resolved_at: string | null
+          starts_on: string
+          status: Database["public"]["Enums"]["challenge_status"]
+          target_value: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deadline: string
+          id?: string
+          metric: Database["public"]["Enums"]["challenge_metric"]
+          narrative_hook: string
+          progress_value?: number
+          resolution_chapter_id?: string | null
+          resolved_at?: string | null
+          starts_on?: string
+          status?: Database["public"]["Enums"]["challenge_status"]
+          target_value: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string
+          id?: string
+          metric?: Database["public"]["Enums"]["challenge_metric"]
+          narrative_hook?: string
+          progress_value?: number
+          resolution_chapter_id?: string | null
+          resolved_at?: string | null
+          starts_on?: string
+          status?: Database["public"]["Enums"]["challenge_status"]
+          target_value?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_challenges_resolution_chapter_id_fkey"
+            columns: ["resolution_chapter_id"]
+            isOneToOne: false
+            referencedRelation: "story_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_chapters: {
         Row: {
           activity_snapshot: Json
@@ -188,6 +247,8 @@ export type Database = {
     }
     Enums: {
       activity_source: "manual" | "withings" | "apple_health"
+      challenge_metric: "active_minutes" | "steps" | "workouts"
+      challenge_status: "active" | "completed" | "failed"
       chapter_type: "daily_teaser" | "weekly_chapter" | "prologue"
       story_genre: "fantasy" | "scifi" | "mystery" | "slice_of_life"
     }
@@ -318,6 +379,8 @@ export const Constants = {
   public: {
     Enums: {
       activity_source: ["manual", "withings", "apple_health"],
+      challenge_metric: ["active_minutes", "steps", "workouts"],
+      challenge_status: ["active", "completed", "failed"],
       chapter_type: ["daily_teaser", "weekly_chapter", "prologue"],
       story_genre: ["fantasy", "scifi", "mystery", "slice_of_life"],
     },
