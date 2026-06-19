@@ -7,7 +7,7 @@ export const getDashboardData = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [profileRes, activityRes, weightRes, chaptersRes, storyStateRes] = await Promise.all([
+    const [profileRes, activityRes, weightRes, chaptersRes, storyStateRes, challengeRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase
         .from("activity_entries")
@@ -20,14 +20,22 @@ export const getDashboardData = createServerFn({ method: "GET" })
         .select("*")
         .eq("user_id", userId)
         .order("entry_date", { ascending: false })
-        .limit(60),
+        .limit(90),
       supabase
         .from("story_chapters")
-        .select("id,title,chapter_type,created_at,read_at")
+        .select("id,title,chapter_type,created_at,read_at,activity_snapshot")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(5),
       supabase.from("story_state").select("*").eq("user_id", userId).maybeSingle(),
+      supabase
+        .from("story_challenges")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("deadline", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     return {
@@ -36,6 +44,7 @@ export const getDashboardData = createServerFn({ method: "GET" })
       weights: weightRes.data ?? [],
       recentChapters: chaptersRes.data ?? [],
       storyState: storyStateRes.data,
+      activeChallenge: challengeRes.data,
     };
   });
 
@@ -70,6 +79,51 @@ export const logActivity = createServerFn({ method: "POST" })
     return row;
   });
 
+export const updateActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({ id: z.string().uuid() })
+      .merge(ActivityInput.partial())
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { id, ...patch } = data;
+    const { error } = await context.supabase
+      .from("activity_entries")
+      .update(patch)
+      .eq("id", id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("activity_entries")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getActivityHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("activity_entries")
+      .select("*")
+      .eq("user_id", context.userId)
+      .order("entry_date", { ascending: false })
+      .limit(120);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
 const WeightInput = z.object({
   entry_date: z.string().optional(),
   weight_kg: z.number().min(20).max(500),
@@ -95,6 +149,32 @@ export const logWeight = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return row;
+  });
+
+export const deleteWeight = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("weight_entries")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getWeightHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("weight_entries")
+      .select("*")
+      .eq("user_id", context.userId)
+      .order("entry_date", { ascending: false })
+      .limit(180);
+    if (error) throw new Error(error.message);
+    return data ?? [];
   });
 
 const OnboardingInput = z.object({
