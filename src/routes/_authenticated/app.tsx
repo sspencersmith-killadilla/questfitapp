@@ -250,7 +250,7 @@ function LogWeightCard({ onLogged }: { onLogged: () => void }) {
   return (
     <Card className="p-6">
       <h3 className="font-semibold">Log weight</h3>
-      <p className="text-sm text-muted-foreground">Manual entry
+      <p className="text-sm text-muted-foreground">Manual entry</p>
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="weight">Weight (kg)</Label>
