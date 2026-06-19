@@ -54,7 +54,7 @@ function Landing() {
               </a>
             </div>
             <p className="mt-6 text-sm text-muted-foreground">
-              Free during preview · Connect a Withings scale or log manually
+              Free during preview · Log your activity and weight manually
             </p>
           </div>
 
@@ -92,7 +92,7 @@ function Landing() {
 
         <section className="mt-32 grid gap-6 md:grid-cols-3">
           {[
-            { n: "1", t: "Log your activity", d: "Sync your Withings scale automatically. Enter steps and workouts manually until Apple Watch support arrives." },
+            { n: "1", t: "Log your activity", d: "Enter steps, workouts, and weight by hand. Device sync can come later — for now you stay in control." },
             { n: "2", t: "Hit your goal", d: "Set a weekly active-minutes goal. Your performance becomes the input to the story engine." },
             { n: "3", t: "Read what unlocks", d: "Daily teasers and a full chapter each week, written for you by the AI based on what you actually did." },
           ].map((s) => (
