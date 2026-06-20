@@ -55,11 +55,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          autoplay_next: boolean
           chosen_genre: Database["public"]["Enums"]["story_genre"] | null
           created_at: string
           display_name: string | null
           id: string
+          narrator_voice_id: string
           onboarding_complete: boolean
+          playback_speed: number
           starting_weight_kg: number | null
           updated_at: string
           weekly_goal_minutes: number
@@ -67,11 +70,14 @@ export type Database = {
           weekly_goal_workouts: number
         }
         Insert: {
+          autoplay_next?: boolean
           chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
           created_at?: string
           display_name?: string | null
           id: string
+          narrator_voice_id?: string
           onboarding_complete?: boolean
+          playback_speed?: number
           starting_weight_kg?: number | null
           updated_at?: string
           weekly_goal_minutes?: number
@@ -79,11 +85,14 @@ export type Database = {
           weekly_goal_workouts?: number
         }
         Update: {
+          autoplay_next?: boolean
           chosen_genre?: Database["public"]["Enums"]["story_genre"] | null
           created_at?: string
           display_name?: string | null
           id?: string
+          narrator_voice_id?: string
           onboarding_complete?: boolean
+          playback_speed?: number
           starting_weight_kg?: number | null
           updated_at?: string
           weekly_goal_minutes?: number
@@ -154,6 +163,11 @@ export type Database = {
       story_chapters: {
         Row: {
           activity_snapshot: Json
+          audio_duration_seconds: number | null
+          audio_error: string | null
+          audio_path: string | null
+          audio_status: Database["public"]["Enums"]["audio_status"]
+          audio_voice_id: string | null
           chapter_type: Database["public"]["Enums"]["chapter_type"]
           content: string
           created_at: string
@@ -164,6 +178,11 @@ export type Database = {
         }
         Insert: {
           activity_snapshot?: Json
+          audio_duration_seconds?: number | null
+          audio_error?: string | null
+          audio_path?: string | null
+          audio_status?: Database["public"]["Enums"]["audio_status"]
+          audio_voice_id?: string | null
           chapter_type: Database["public"]["Enums"]["chapter_type"]
           content: string
           created_at?: string
@@ -174,6 +193,11 @@ export type Database = {
         }
         Update: {
           activity_snapshot?: Json
+          audio_duration_seconds?: number | null
+          audio_error?: string | null
+          audio_path?: string | null
+          audio_status?: Database["public"]["Enums"]["audio_status"]
+          audio_voice_id?: string | null
           chapter_type?: Database["public"]["Enums"]["chapter_type"]
           content?: string
           created_at?: string
@@ -256,6 +280,7 @@ export type Database = {
     }
     Enums: {
       activity_source: "manual" | "withings" | "apple_health"
+      audio_status: "idle" | "pending" | "ready" | "failed"
       challenge_metric: "active_minutes" | "steps" | "workouts"
       challenge_status: "active" | "completed" | "failed"
       chapter_type: "daily_teaser" | "weekly_chapter" | "prologue"
@@ -388,6 +413,7 @@ export const Constants = {
   public: {
     Enums: {
       activity_source: ["manual", "withings", "apple_health"],
+      audio_status: ["idle", "pending", "ready", "failed"],
       challenge_metric: ["active_minutes", "steps", "workouts"],
       challenge_status: ["active", "completed", "failed"],
       chapter_type: ["daily_teaser", "weekly_chapter", "prologue"],
