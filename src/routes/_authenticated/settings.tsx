@@ -1,14 +1,18 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getDashboardData } from "@/lib/dashboard.functions";
 import { updateSettings } from "@/lib/settings.functions";
+import { previewVoice } from "@/lib/narration.functions";
+import { NARRATOR_VOICES, DEFAULT_VOICE_ID } from "@/lib/voices";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Play, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -19,6 +23,7 @@ function SettingsPage() {
   const qc = useQueryClient();
   const fetchDashboard = useServerFn(getDashboardData);
   const saveFn = useServerFn(updateSettings);
+  const previewFn = useServerFn(previewVoice);
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
@@ -31,7 +36,13 @@ function SettingsPage() {
     weekly_goal_steps: 35000,
     weekly_goal_workouts: 3,
     starting_weight_kg: "",
+    narrator_voice_id: DEFAULT_VOICE_ID,
+    playback_speed: 1,
+    autoplay_next: true,
   });
+
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!data?.profile) return;
@@ -45,6 +56,9 @@ function SettingsPage() {
         p.starting_weight_kg !== null && p.starting_weight_kg !== undefined
           ? String(p.starting_weight_kg)
           : "",
+      narrator_voice_id: p.narrator_voice_id ?? DEFAULT_VOICE_ID,
+      playback_speed: Number(p.playback_speed ?? 1),
+      autoplay_next: p.autoplay_next ?? true,
     });
   }, [data?.profile]);
 
@@ -59,6 +73,9 @@ function SettingsPage() {
           starting_weight_kg: form.starting_weight_kg
             ? Number(form.starting_weight_kg)
             : null,
+          narrator_voice_id: form.narrator_voice_id,
+          playback_speed: form.playback_speed,
+          autoplay_next: form.autoplay_next,
         },
       }),
     onSuccess: () => {
@@ -68,6 +85,24 @@ function SettingsPage() {
     },
     onError: (e: any) => toast.error(e.message ?? "Could not save"),
   });
+
+  const playPreview = async (voiceId: string) => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPreviewingId(voiceId);
+      const res = await previewFn({ data: { voice_id: voiceId } });
+      const audio = new Audio(`data:${res.mime};base64,${res.audio_base64}`);
+      audioRef.current = audio;
+      audio.onended = () => setPreviewingId((c) => (c === voiceId ? null : c));
+      await audio.play();
+    } catch (e: any) {
+      toast.error(e.message ?? "Preview failed");
+      setPreviewingId(null);
+    }
+  };
 
   if (isLoading || !data) {
     return <div className="text-sm text-muted-foreground">Loading…</div>;
@@ -81,8 +116,8 @@ function SettingsPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Reader profile</p>
         <h1 className="mt-2 font-display text-5xl font-semibold">Settings</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Set your weekly intentions. The dashboard, your streak, and the story all measure progress
-          against these targets.
+          Set your weekly intentions, choose the voice that reads to you, and shape how the story
+          measures your effort.
         </p>
       </div>
 
@@ -140,6 +175,96 @@ function SettingsPage() {
             {Math.round(form.weekly_goal_minutes / 7)} min,{" "}
             {Math.round(form.weekly_goal_steps / 7).toLocaleString()} steps a day.
           </p>
+
+          <div className="rule-divider text-sm">Narrator</div>
+
+          <p className="text-xs text-muted-foreground">
+            Choose the voice that will read your chapters aloud. Tap any narrator to hear a sample.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {NARRATOR_VOICES.map((v) => {
+              const selected = form.narrator_voice_id === v.id;
+              const isPreviewing = previewingId === v.id;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, narrator_voice_id: v.id }))}
+                  className={`rounded-lg border p-4 text-left transition ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                      : "hover:border-foreground/30"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-display text-lg font-semibold">{v.name}</div>
+                      <div className="mt-1 text-xs italic text-muted-foreground">
+                        {v.tagline}
+                      </div>
+                      <div className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {v.bestFor}
+                      </div>
+                    </div>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playPreview(v.id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          playPreview(v.id);
+                        }
+                      }}
+                      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border bg-background text-foreground hover:bg-muted"
+                      aria-label={`Preview ${v.name}`}
+                    >
+                      {isPreviewing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Play className="h-3.5 w-3.5" />
+                      )}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="speed">Default playback speed</Label>
+              <select
+                id="speed"
+                value={form.playback_speed}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, playback_speed: Number(e.target.value) }))
+                }
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {[0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map((s) => (
+                  <option key={s} value={s}>
+                    {s}×
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1">
+                <Label>Autoplay next chapter</Label>
+                <p className="text-xs text-muted-foreground">
+                  When one chapter ends, queue the next unlocked one.
+                </p>
+              </div>
+              <Switch
+                checked={form.autoplay_next}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, autoplay_next: v }))}
+              />
+            </div>
+          </div>
 
           <div className="rule-divider text-sm">Body measurements</div>
 
