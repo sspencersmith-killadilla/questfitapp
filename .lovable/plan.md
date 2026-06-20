@@ -1,64 +1,63 @@
-## Where things stand
+# Serial Audiobook Narration
 
-The skeleton from the first build already includes:
-- Manual activity logging (steps, minutes, workout type, intensity) — card on `/app`
-- Manual weight logging (weight, body fat) — card on `/app`
-- A summary dashboard (weekly minutes, steps, latest weight, progress bar)
-- The AI narrative engine (`generateChapter`) producing prologue, daily teaser, and weekly chapter, with a rolling story summary fed back into future prompts
+Turn each unlocked chapter (and optionally daily teasers) into a streamed, audiobook-quality listen using **ElevenLabs Text-to-Speech**. Lovable AI Gateway's TTS is fine for UI voice but ElevenLabs (`eleven_multilingual_v2`) is the industry standard for narration — natural prosody, character consistency, and per-genre voice selection.
 
-So this round is about **upgrading** each of those from "exists" to "feels like a product." No new external integrations.
+## What "audiobook quality" requires
 
-## What I'll build
+1. **A premium TTS engine** — ElevenLabs `eleven_multilingual_v2` for final renders, `eleven_turbo_v2_5` if we ever need live streaming. Lovable AI's `gpt-4o-mini-tts` is serviceable but noticeably more synthetic for long-form fiction.
+2. **A narrator voice per genre** — e.g. a grave baritone (George) for epic fantasy, a brighter voice (Sarah) for adventure, etc. Picked at onboarding alongside genre, editable in Settings.
+3. **Request stitching** — chapters exceed the per-request length cap, so we split at paragraph boundaries and pass `previous_text` / `next_text` so prosody flows naturally across segments.
+4. **Pre-render + cache** — generate once per chapter, store the MP3 in Lovable Cloud Storage, serve a signed URL. Avoids re-billing on every replay and removes playback latency.
+5. **A real player UI** — play/pause, 15s skip, speed (0.8-1.5x), progress scrubber, resume-where-you-left-off, sleep timer. Synced text highlight is out of scope for v1 (requires word-level timestamps; can add later).
 
-### 1. Manual workout log — dedicated page `/log/workout`
-- Full form (date picker, workout type dropdown with common presets + custom, intensity, steps, active minutes, notes)
-- Recent workouts list (last 30 days), grouped by week, with edit & delete
-- Quick "log yesterday" shortcut
-- Keep the small quick-log card on `/app` as a shortcut
+## User-facing changes
 
-### 2. Manual weigh-in log — dedicated page `/log/weight`
-- Full form (date, weight kg, body fat %, muscle kg, optional note)
-- Trend chart (last 90 days, line chart via Recharts — already in shadcn stack)
-- Table of recent entries with edit & delete
-- 7-day and 30-day averages, delta vs. starting weight
+- **Onboarding**: after genre pick, a "Choose your narrator" step with 3-4 voice samples (pre-rendered 8-sec clips).
+- **Chapter page (`chapters.$id.tsx`)**: sticky audio player at top; "Generating narration…" state on first open; text below as the read-along transcript.
+- **Library**: little headphones icon on chapters with audio ready; total listen time per chapter.
+- **Settings**: change narrator voice, default playback speed, autoplay next chapter toggle.
+- **Daily teasers**: optional 30-60s audio teaser using the same voice (cheap, short).
 
-### 3. Activity dashboard — upgrade `/app`
-- Hero strip: streak (consecutive days with activity), weekly minutes ring, weekly steps, latest weight delta
-- 14-day activity bar chart (minutes per day, colored by goal hit/miss)
-- "This week vs last week" comparison tiles
-- Story status panel: last chapter, days until next weekly chapter, button to generate
-- Keep the inline quick-log cards but make the bigger forms live on the dedicated pages
+## Technical plan
 
-### 4. Story progression engine — upgrades to what exists
-- **Auto-cadence rules** enforced server-side in `generateChapter`:
-  - Prologue: only once
-  - Daily teaser: max one per calendar day
-  - Weekly chapter: at most once per 7 days, requires at least 3 activity-days in window
-- **Arc tracking**: persist `current_arc` in `story_state` and pass it into the prompt so the AI advances a named arc instead of drifting
-- **Branching tone**: snapshot already classifies hit/miss/idle; expand to four bands (crushed it / hit / near-miss / dormant) so prose tone is clearer
-- **Chapter unlock UI**: on `/app`, show "Next weekly chapter unlocks after N more active days" when criteria aren't met, with a disabled button + tooltip
-- **Library polish** (`/library`): group by week, show locked/unread badges, show the activity snapshot that produced each chapter ("Born from: 4 workouts, 142 min")
+**Connector**: ElevenLabs standard connector (syncs `ELEVENLABS_API_KEY` server-side). User links it once.
 
-### 5. Narrative challenges (new)
-A "challenge" = a short, AI-written, genre-flavored micro-goal tied to a real fitness target with a deadline. Examples: "Cross the Marrow Pass — 3 workouts in the next 5 days." If completed, the next chapter incorporates the victory; if missed, it incorporates the setback.
+**New schema** (migration):
+- `profiles.narrator_voice_id text default 'JBFqnCBsd6RMkjVDRZzb'` (George)
+- `profiles.playback_speed numeric default 1.0`
+- `profiles.autoplay_next boolean default true`
+- `chapters.audio_url text` (signed storage path)
+- `chapters.audio_duration_seconds int`
+- `chapters.audio_status text` ('pending' | 'ready' | 'failed')
+- New Storage bucket `chapter-audio` (private, RLS: owner read).
 
-- New table `story_challenges` (title, narrative_hook, metric, target, deadline, status: active/completed/failed, linked chapter on resolution)
-- Server fn `generateChallenge` — AI proposes a challenge using current arc + recent activity
-- Server fn `evaluateChallenges` — called on dashboard load; auto-marks completed/failed based on activity in the window
-- `/app` shows active challenge card with progress bar; library lists past challenges
-- One active challenge at a time to keep it focused
+**Server functions** (`src/lib/narration.functions.ts`):
+- `renderChapterAudio({ chapterId })` — auth-gated. Loads chapter text, chunks into ~400-word segments at paragraph boundaries, calls ElevenLabs per segment with stitching context, concatenates MP3 frames, uploads to `chapter-audio/<userId>/<chapterId>.mp3`, updates row. Idempotent: short-circuits if `audio_status='ready'`.
+- `getChapterAudioUrl({ chapterId })` — returns short-lived signed URL.
+- `previewVoice({ voiceId })` — renders a fixed 1-sentence sample for onboarding/settings (cached by voiceId).
 
-## Technical notes
+**Auto-trigger**: when `generateChapter` finishes writing prose, it enqueues `renderChapterAudio` (fire-and-forget call from the same handler). Chapter route polls every 3s until `audio_status='ready'`.
 
-- New route files: `src/routes/_authenticated/log.workout.tsx`, `src/routes/_authenticated/log.weight.tsx`
-- Extend `dashboard.functions.ts` with `updateActivity`, `deleteActivity`, `updateWeight`, `deleteWeight`
-- New `src/lib/challenges.functions.ts` with `generateChallenge`, `getActiveChallenge`, `evaluateChallenges`
-- Migration: create `story_challenges` table with RLS + grants scoped to `auth.uid()`
-- Charts via Recharts (already in the shadcn dependency set)
-- All AI calls keep using `google/gemini-3-flash-preview` through the existing `chatCompletion` helper
+**Player**: native `<audio>` element + custom shadcn controls. Persist `currentTime` to `localStorage` keyed by chapterId for resume. No third-party player lib needed.
 
-## Out of scope for this pass
-- Push/email notifications when a chapter unlocks
-- Real device sync (Apple Watch / Withings)
-- Audio narration of chapters
-- Social / sharing
+**Voice catalog** (initial 4):
+- George `JBFqnCBsd6RMkjVDRZzb` — epic fantasy default
+- Sarah `EXAVITQu4vr4xnSDxMaL` — warm contemporary
+- Brian `nPczCjzI2devNBz1zQrb` — gritty noir
+- Lily `pFZP5JQG7iQjIQuC4Bku` — bright YA
+
+## Costs to flag
+
+ElevenLabs bills by characters. A ~1,500-word weekly chapter ≈ 9k characters ≈ noticeable credit usage on their free tier. Worth telling users their ElevenLabs account is what gets billed.
+
+## Out of scope (v1)
+
+- Word-level karaoke highlighting (needs forced alignment).
+- Multi-voice dialogue casting (one narrator per chapter).
+- Background music / SFX beds.
+- Offline downloads / native app.
+- Voice cloning of the user.
+
+## Open question before I build
+
+Should I default to **auto-render every chapter** (best UX, higher cost) or **"Generate audio" button per chapter** (user controls cost)?
