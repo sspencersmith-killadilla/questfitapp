@@ -1,24 +1,17 @@
-# $5/month QuestFit Premium
+# Brand favicon + MIT license
 
-Use Lovable's built-in Stripe payments (no Stripe account needed to start; test mode first, go live later). Requires a Pro plan.
+## Current state
+- No `public/` folder and no icon link in the site head, so browsers show a generic icon.
+- No logo exists in the project yet.
+- No LICENSE or README file; package.json has no license field.
 
-## Defaults (change any of these)
-- **Free:** workout + weigh-in logs, dashboard, goals, first 3 story chapters.
-- **Premium ($5/month):** all chapters, audiobook narration, all narrator voices.
-- Monthly only at launch.
-- Existing users get 30 days of Premium free, then drop to free.
-- Native apps later: subscribe on the website, apps just read the status (avoids Apple/Google's cut).
+## 1. Favicon
+- Design a square QuestFit icon in the app's "leather-bound gym journal" look: deep ember/leather background, gold mark (an open book combined with a small flame/footstep), bold shapes with no tiny text so it reads at 16-32px.
+- Save it to `public/favicon.png` (64x64, padded square).
+- Add `{ rel: "icon", type: "image/png", href: "/favicon.png" }` to the root page head.
+- There is no `public/favicon.ico` to delete; I'll confirm none exists.
 
-## Steps
-1. Run the payment eligibility check, then enable Stripe with full tax/compliance handling (Stripe handles tax, fraud, disputes; +3.5% per sale).
-2. Create the product: QuestFit Premium, $5.00 USD/month.
-3. Add subscription fields to user profiles (status, renewal date, Stripe customer id).
-4. Checkout + "Manage subscription" (cancel, update card) actions.
-5. Payment webhook that updates the user's status when they subscribe, renew, fail payment, or cancel.
-6. Server-side Premium checks on audio generation, chapters 4+, and premium voices.
-7. UI: Subscription card in Settings, upgrade popup on locked features, small Premium badge.
-8. Test with Stripe's test card end-to-end, then you claim the live account when ready.
-
-## Technical notes
-- `createServerFn` + `requireSupabaseAuth` for checkout/portal; webhook at `src/routes/api/public/stripe/webhook.ts` with signature verification, writes via `supabaseAdmin`.
-- Entitlement = status `active` and `current_period_end > now()`; client gating is UX only.
+## 2. MIT license
+- Add `LICENSE` at the project root with the standard MIT text, "Copyright (c) 2026 Spencer Smith".
+- Set `"license": "MIT"` in package.json.
+- No README exists, so no README section is added (I'll create a short README with the license line only if you want one).
