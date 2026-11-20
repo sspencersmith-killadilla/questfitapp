@@ -15,7 +15,7 @@ const SettingsInput = z.object({
 
 export const updateSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => SettingsInput.parse(d))
+  .validator((d: unknown) => SettingsInput.parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("profiles")

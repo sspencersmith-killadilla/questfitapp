@@ -183,7 +183,7 @@ const GenerateInput = z.object({
 
 export const generateChapter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => GenerateInput.parse(d))
+  .validator((d: unknown) => GenerateInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -364,7 +364,7 @@ export const getChapterList = createServerFn({ method: "GET" })
 
 export const getChapter = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: chapter, error } = await context.supabase
       .from("story_chapters")

@@ -59,7 +59,7 @@ const ActivityInput = z.object({
 
 export const logActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ActivityInput.parse(d))
+  .validator((d: unknown) => ActivityInput.parse(d))
   .handler(async ({ data, context }) => {
     const { error, data: row } = await context.supabase
       .from("activity_entries")
@@ -81,7 +81,7 @@ export const logActivity = createServerFn({ method: "POST" })
 
 export const updateActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ id: z.string().uuid() })
       .merge(ActivityInput.partial())
@@ -100,7 +100,7 @@ export const updateActivity = createServerFn({ method: "POST" })
 
 export const deleteActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("activity_entries")
@@ -133,7 +133,7 @@ const WeightInput = z.object({
 
 export const logWeight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => WeightInput.parse(d))
+  .validator((d: unknown) => WeightInput.parse(d))
   .handler(async ({ data, context }) => {
     const { error, data: row } = await context.supabase
       .from("weight_entries")
@@ -153,7 +153,7 @@ export const logWeight = createServerFn({ method: "POST" })
 
 export const deleteWeight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("weight_entries")
@@ -186,7 +186,7 @@ const OnboardingInput = z.object({
 
 export const completeOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => OnboardingInput.parse(d))
+  .validator((d: unknown) => OnboardingInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error: profileErr } = await supabase

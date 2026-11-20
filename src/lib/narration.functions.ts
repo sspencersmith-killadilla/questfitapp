@@ -104,7 +104,7 @@ function estimateDurationSeconds(text: string): number {
 
 export const renderChapterAudio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ chapter_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ chapter_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const apiKey = requireElevenLabsKey();
@@ -181,7 +181,7 @@ export const renderChapterAudio = createServerFn({ method: "POST" })
 
 export const getChapterAudioUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ chapter_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ chapter_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: chapter, error } = await supabase
@@ -203,7 +203,7 @@ export const getChapterAudioUrl = createServerFn({ method: "POST" })
 
 export const previewVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ voice_id: z.string().min(1) }).parse(d))
+  .validator((d: unknown) => z.object({ voice_id: z.string().min(1) }).parse(d))
   .handler(async ({ data }) => {
     const apiKey = requireElevenLabsKey();
     const voice = NARRATOR_VOICES.find((v) => v.id === data.voice_id);
